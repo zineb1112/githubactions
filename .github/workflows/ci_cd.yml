@@ -1,0 +1,75 @@
+# ============================================================
+# Nom du workflow
+# ============================================================
+name: CI/CD Pipeline
+
+# ============================================================
+# DÉCLENCHEURS (Events)
+# Le workflow se lance quand :
+# - Un push arrive sur la branche main
+# - Une Pull Request cible main
+# ============================================================
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+# ============================================================
+# JOBS (Tâches)
+# ============================================================
+jobs:
+
+  # ----------------------------------------------------------
+  # JOB 1 : TESTS
+  # Vérifie que le code fonctionne correctement.
+  # ----------------------------------------------------------
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # 1. Récupérer le code du dépôt GitHub
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # 2. Installer Python 3.12
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      # 3. Installer les dépendances du projet
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      # 4. Exécuter les tests avec pytest
+      - name: Lancer les tests
+        run: pytest -q
+
+  # ----------------------------------------------------------
+  # JOB 2 : BUILD DOCKER
+  # Ce job s'exécute uniquement si le job test réussit.
+  # ----------------------------------------------------------
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # 1. Récupérer le code du dépôt
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # 2. Construire l'image Docker
+      # Le SHA permet d'identifier précisément le commit.
+      - name: Construire l'image Docker
+        run: docker build -t myapp:${{ github.sha }} .
+
+      # 3. Confirmer la construction de l'image
+      - name: Confirmer le build
+        run: echo "Image construite avec le tag myapp:${GITHUB_SHA}"
