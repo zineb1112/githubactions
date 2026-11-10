@@ -28,7 +28,7 @@ jobs:
   # Vérifie que le code fonctionne correctement.
   # ----------------------------------------------------------
   test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
 
